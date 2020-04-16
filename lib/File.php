@@ -4,7 +4,7 @@ class File
 {
     public $file_path;
     
-    function  __construct($file_path) {
+    function __construct($file_path) {
         $this->file_path = $file_path;
     }
 
