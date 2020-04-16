@@ -3,31 +3,45 @@
 require('C:\Users\worky\projects\e-store\curl_api\lib\Curl.php');
 require('C:\Users\worky\projects\e-store\curl_api\lib\File.php');
 
-// 標準入力
-// $stdin = fgets(STDIN);
-// echo $stdin;
+$request_method = $argv[1];
+$url = $argv[2];
 
-// postかgetか
-// jsonファイルか文字列か
+if (is_null($request_method)) {
+    echo '第1引数: リクエストメソッドが指定されていません。';
+    exit;
+}
 
-$url = $argv[1];
-$file_path = $argv[2];
-$curl_ = $argv[2];
+if (is_null($url)) {
+    echo '第2引数: リクエストURLが指定されていません。';
+    exit;
+}
 
-$file = new File($file_path);
-$json_data = $file->json_file_read();
+// basic認証のPWがAPIによって異なる可能性あり。
+
 $BASIC_AUTH_USERNAME = $_SERVER['_USER__NAME'];
 $BASIC_AUTH_PASS = $_SERVER['_PASS__WORD'];
-
-// curlのoptionsを設定
-$options = array(CURLOPT_URL => $url,
+// レスポンスメソッド判断
+if ($request_method == 'GET') {
+    $options = array(CURLOPT_URL => $url,
                  CURLOPT_RETURNTRANSFER => true,
                  CURLOPT_POST => true,
                  CURLOPT_SSL_VERIFYPEER => false,
+                 CURLOPT_USERPWD => "$BASIC_AUTH_USERNAME:$BASIC_AUTH_PASS"
                  );
+    $curl = new Curl($options);
+    $curl->get_request();
+}
 
-if (request_method == 'POST') {
-$options = array(CURLOPT_URL => $url,
+if ($request_method == 'POST') {
+    $file_path = $argv[3];
+    if(is_null($file_path)) {
+        echo '第3引数: ファイルパスが指定されていません。';
+        exit;
+    }
+
+    $file = new File($file_path);
+    $json_data = $file->json_file_read();
+    $options = array(CURLOPT_URL => $url,
                  CURLOPT_RETURNTRANSFER => true,
                  CURLOPT_POST => true,
                  CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
@@ -35,35 +49,14 @@ $options = array(CURLOPT_URL => $url,
                  CURLOPT_SSL_VERIFYPEER => false,
                  CURLOPT_USERPWD => "$BASIC_AUTH_USERNAME:$BASIC_AUTH_PASS"
                 );
+
+    $curl = new Curl($options);
+    $html = $curl->post_request();
+
+    echo $html['total_count'];
 }
 
+// レスポンス形式もjsonと仮定して
+// todo: jsonの結果から任意の値を抽出する。
 
-$curl = new Curl($options);
-// $curl->get_request();
-$curl->post_request();
 
-// var_dump($json);
-
-// jsonデータをArray形式に変更する。
-// $obj = json_decode($json, true);
-// var_dump($obj);
-
-// $curl->test();
-// echo $curl->get_request($url);
-
-// phpでjsonデータを作成する。
-// $data = array(
-// 	'test1'=>'aaa',
-// 	'test2'=> array(
-// 		array(
-// 			'test3'=>'bbb'
-// 		)
-// 	),
-// 	'test4'=> array(
-// 		array(
-// 			'test5'=>'ccc',
-// 			'test6'=>'ddd'
-// 		)
-// 	)
-// );
-// $data_json = json_encode($data);
