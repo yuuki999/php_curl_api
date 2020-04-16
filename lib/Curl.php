@@ -1,5 +1,7 @@
 <?php
 
+require('C:\Users\worky\projects\e-store\curl_api\lib\Http.php');
+
 class Curl
 {
     public $options;
@@ -16,14 +18,17 @@ class Curl
      * @return string $html
      * @throws 例外についての記述
      */
-    public function get_request($url) {
+    public function get_request() {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url); 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // HTTPS証明書を信頼する。これがないとfalseがreturn
+        curl_setopt_array($ch, $this->options);
 
-        $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        // 実行
         $html =  curl_exec($ch);
+
+        // ステータスコードチェック
+        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $http_instance = new Http($status_code);
+        $http_instance->response_code_check();
 
         echo 'status_code: ' . $status_code . "\n";
         echo "reponse: \n\n" . $html;
@@ -42,13 +47,20 @@ class Curl
      */
     public function post_request() {
         $ch = curl_init();
-
         curl_setopt_array($ch, $this->options);
-        $status_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-        $html =  curl_exec($ch);
 
+        // 実行
+        $html =  curl_exec($ch);
+        $html = json_decode($html, true);
+
+        // ステータスコードチェック
+        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $http_instance = new Http($status_code);
+        $http_instance->response_code_check();
+        
         echo 'status_code: ' . $status_code . "\n";
-        echo "reponse: \n\n" . $html;
+        echo "reponse: \n\n";
+        var_dump($html);
         curl_close($ch);
 
         return $html;
